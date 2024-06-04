@@ -3,7 +3,6 @@
 #include <iostream>
 #include "shader.h"
 
-// Vertex data for a full-screen quad
 float vertices[] = {
     -1.0f,  1.0f, 0.0f,
     -1.0f, -1.0f, 0.0f,
@@ -22,7 +21,7 @@ int main(void) {
     if (!glfwInit())
         return -1;
 
-    window = glfwCreateWindow(800, 600, "RaycasterC++", NULL, NULL);
+    window = glfwCreateWindow(1920, 1080, "RaycasterC++", NULL, NULL);
     if (!window) {
         glfwTerminate();
         return -1;
@@ -54,6 +53,14 @@ int main(void) {
     glEnableVertexAttribArray(0);
 
     glUseProgram(shaderProgram);
+
+    // Set the number of vertical pixels
+    int verticalPixels = 1080/8;
+    int horizontalPixels = 1920/8;
+    int verticalPixelsLocation = glGetUniformLocation(shaderProgram, "verticalPixels");
+    int horizontalPixelsLocation = glGetUniformLocation(shaderProgram, "horizontalPixels");
+    glUniform1i(verticalPixelsLocation, verticalPixels);
+    glUniform1i(horizontalPixelsLocation, horizontalPixels);
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
