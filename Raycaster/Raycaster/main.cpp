@@ -9,6 +9,10 @@
 const unsigned int WIDTH = 1920;
 const unsigned int HEIGHT = 1080;
 
+// Define map dimensions
+const int MAP_WIDTH = 16;
+const int MAP_HEIGHT = 16;
+
 // Define PI
 const float PI = 3.14159265359f;
 
@@ -19,12 +23,14 @@ float playerAngle = 0.0f;
 
 // Shaders
 GLuint shaderProgram;
+GLuint minimapShaderProgram;
 GLuint VAO, VBO;
 
 // Function prototypes
 void processInput(GLFWwindow* window, double deltaTime);
 void compileShaders();
 void setupBuffers();
+void LoadMapToGpu(int mapData[MAP_WIDTH][MAP_HEIGHT], GLuint shader);
 
 int main()
 {
@@ -80,6 +86,25 @@ int main()
     std::cout << "--------------------------------" << std::endl;
     std::cout << "Starting game loop" << std::endl;
 
+    int mapData[MAP_WIDTH][MAP_HEIGHT] = {
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1},
+        {1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1},
+        {1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1},
+        {1, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+        { 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1 },
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1},
+        {1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1},
+        {1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1},
+        {1, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+    };
+
     // Main loop
     while (!glfwWindowShouldClose(window) && !(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS))
     {
@@ -95,6 +120,8 @@ int main()
         // Use the shader program
         glUseProgram(shaderProgram);
 
+        
+
         // Update uniforms
         GLint resolutionLoc = glGetUniformLocation(shaderProgram, "uResolution");
         glUniform2f(resolutionLoc, WIDTH, HEIGHT);
@@ -105,9 +132,12 @@ int main()
         GLint playerAngleLoc = glGetUniformLocation(shaderProgram, "uPlayerAngle");
         glUniform1f(playerAngleLoc, playerAngle);
 
+        LoadMapToGpu(mapData, shaderProgram);
+
         // Draw the quad
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 6);
+
 
         // Swap buffers
         glfwSwapBuffers(window);
@@ -128,6 +158,30 @@ int main()
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;
+}
+
+void LoadMapToGpu(int mapData[MAP_WIDTH][MAP_HEIGHT], GLuint shader)
+{
+    // Generate and bind a texture object
+    GLuint mapTexture;
+    glGenTextures(1, &mapTexture);
+    glBindTexture(GL_TEXTURE_2D, mapTexture);
+
+    // Set texture parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    // Transfer map data to the texture
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG, MAP_WIDTH, MAP_HEIGHT, 0, GL_RG, GL_UNSIGNED_BYTE, mapData);
+
+    // Pass the texture to the shader
+    glUseProgram(shader);
+    GLint mapLoc = glGetUniformLocation(shader, "map");
+    glUniform1i(mapLoc, 0); // Bind to texture unit 0
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mapTexture);
 }
 
 void processInput(GLFWwindow* window, double deltaTime)
@@ -231,11 +285,14 @@ void compileShaders()
         std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
 
+    
+
     // Link shaders
     shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
+    
 
     // Check for linking errors
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
@@ -243,6 +300,7 @@ void compileShaders()
         glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
         std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
     }
+    
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
@@ -275,4 +333,5 @@ void setupBuffers()
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
 }
