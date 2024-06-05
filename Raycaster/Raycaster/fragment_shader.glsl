@@ -10,6 +10,7 @@ uniform float uPlayerAngle;
 
 
 uniform sampler2D map;
+uniform sampler2D textures;
 
 
 const float FOV = 2;
@@ -96,9 +97,24 @@ void main()
         color = vec3(0.7, 0.7, 0.7);
     } else {
         float shade = 1.0 - distToWall / textureSize(map, 0).x;
+        // Sample texture
+        float drawStart = (uResolution.y - wallHeight) / 2.0;
 
-        color = vec3(shade);
+        bool isWallFacingNorthSouth = abs(rayDir.y) > abs(rayDir.x);
+        bool isWallFacingWestEast = !isWallFacingNorthSouth;
+
+        vec2 texCoord;
+        if (isWallFacingWestEast) {
+            texCoord.x = fract(rayPos.y + distToWall * sin(rayAngle));
+        } else {
+            texCoord.x = fract(rayPos.x + distToWall * cos(rayAngle));
+        }
+        texCoord.y = fract((TexCoord.y - 0.5 + wallHeight) * (uResolution.y / wallHeight) / 2 - 0.5);
+
+
+        vec4 texColor = texture(textures, texCoord);
+        color = vec3(shade) * texColor.rgb;
     }
   
-    FragColor = vec4(color * filterColor, 1.0);
+    FragColor = vec4(color, 1.0);
 }

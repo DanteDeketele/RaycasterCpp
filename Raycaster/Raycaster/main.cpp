@@ -4,6 +4,8 @@
 #include <cmath>
 #include <fstream>
 #include <sstream>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 // Define window dimensions
 const unsigned int WIDTH = 1920;
@@ -30,12 +32,14 @@ GLuint shaderProgram;
 GLuint VAO, VBO;
 
 GLuint mapTexture;
+GLuint wallTexture;
 
 // Function prototypes
 void processInput(GLFWwindow* window, double deltaTime);
 void compileShaders();
 void setupBuffers();
 void LoadMapToGpu(uint8_t mapData[MAP_WIDTH][MAP_HEIGHT]);
+GLuint loadImage(const std::string& filePath);
 
 int main()
 {
@@ -117,6 +121,9 @@ int main()
 		}
 		std::cout << std::endl;
 	}
+    
+    // Load the wall texture
+    wallTexture = loadImage("images/wall.png");
 
     // Load map data to GPU
     LoadMapToGpu(mapData);
@@ -124,6 +131,7 @@ int main()
     // print start data
     std::cout << "Player position: (" << playerPosX << ", " << playerPosY << ")" << std::endl;
     std::cout << "Player angle: " << playerAngle << std::endl;
+
 
 
     // Main loop
@@ -157,6 +165,9 @@ int main()
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, mapTexture);
 
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, wallTexture);
+
         // Update uniforms that change every frame
         GLint resolutionLoc = glGetUniformLocation(shaderProgram, "uResolution");
         glUniform2f(resolutionLoc, WIDTH, HEIGHT);
@@ -169,6 +180,9 @@ int main()
 
         GLint mapLoc = glGetUniformLocation(shaderProgram, "map");
         glUniform1i(mapLoc, 0); // Texture unit 0
+
+        GLint wallLoc = glGetUniformLocation(shaderProgram, "textures");
+        glUniform1i(wallLoc, 1); // Texture unit 1
 
         // Draw the quad
         glBindVertexArray(VAO);
@@ -265,6 +279,48 @@ std::string loadShaderFromFile(const std::string& filePath) {
     std::stringstream shaderStream;
     shaderStream << shaderFile.rdbuf();
     return shaderStream.str();
+}
+
+// Function to load an image file into a texture
+GLuint loadImage(const std::string& filePath)
+{
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    // Set texture wrapping parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // Set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Load image using stb_image
+    int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(true); // Flip image vertically as OpenGL expects the 0.0 coordinate to be at the bottom left corner
+    unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        GLenum format;
+        if (nrChannels == 1)
+            format = GL_RED;
+        else if (nrChannels == 3)
+            format = GL_RGB;
+        else if (nrChannels == 4)
+            format = GL_RGBA;
+
+
+        // Generate the texture
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cerr << "Failed to load texture: " << filePath << std::endl;
+    }
+    stbi_image_free(data);
+
+    return textureID;
 }
 
 void compileShaders()

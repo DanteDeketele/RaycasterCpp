@@ -19,6 +19,9 @@
     <Filter Include="Resource Files\imgui">
       <UniqueIdentifier>{d9eb5e02-82d5-4a32-9120-ab2e6c0690fa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\images">
+      <UniqueIdentifier>{dee3e40b-d522-41ad-9d3d-1d60b7eecb48}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -41,5 +44,10 @@
     <ClInclude Include="shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\images\wall.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
   </ItemGroup>
 </Project>
