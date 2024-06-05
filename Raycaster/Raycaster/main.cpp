@@ -21,16 +21,21 @@ float playerPosX = 4.5f;
 float playerPosY = 4.5f;
 float playerAngle = 0.0f;
 
+// FPS system
+float frameTimes[60];
+int frameTimeIndex = 0;
+
 // Shaders
 GLuint shaderProgram;
-GLuint minimapShaderProgram;
 GLuint VAO, VBO;
+
+GLuint mapTexture;
 
 // Function prototypes
 void processInput(GLFWwindow* window, double deltaTime);
 void compileShaders();
 void setupBuffers();
-void LoadMapToGpu(int mapData[MAP_WIDTH][MAP_HEIGHT], GLuint shader);
+void LoadMapToGpu(uint8_t mapData[MAP_WIDTH][MAP_HEIGHT]);
 
 int main()
 {
@@ -86,24 +91,40 @@ int main()
     std::cout << "--------------------------------" << std::endl;
     std::cout << "Starting game loop" << std::endl;
 
-    int mapData[MAP_WIDTH][MAP_HEIGHT] = {
-        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-        {1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1},
-        {1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1},
-        {1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1},
-        {1, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
-        { 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1 },
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1},
-        {1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1},
-        {1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1},
-        {1, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1},
-        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+    uint8_t mapData[MAP_WIDTH][MAP_HEIGHT] = {
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
     };
+
+    // print map
+    std::cout << "Map:" << std::endl;
+    for (int y = 0; y < MAP_HEIGHT; y++) {
+		for (int x = 0; x < MAP_WIDTH; x++) {
+			std::cout << (int)mapData[x][y] << " ";
+		}
+		std::cout << std::endl;
+	}
+
+    // Load map data to GPU
+    LoadMapToGpu(mapData);
+
+    // print start data
+    std::cout << "Player position: (" << playerPosX << ", " << playerPosY << ")" << std::endl;
+    std::cout << "Player angle: " << playerAngle << std::endl;
+
 
     // Main loop
     while (!glfwWindowShouldClose(window) && !(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS))
@@ -111,6 +132,18 @@ int main()
         double currentTime = glfwGetTime();
         double deltaTime = currentTime - lastFrameTime;
         lastFrameTime = currentTime;
+
+        // FPS counter
+        frameTimes[frameTimeIndex] = (float)deltaTime;
+        frameTimeIndex = (frameTimeIndex + 1) % 60;
+        if (frameTimeIndex == 0) {
+			double sum = 0;
+			for (int i = 0; i < 60; i++) {
+				sum += frameTimes[i];
+			}
+			double fps = 60.0 / sum;
+			std::cout << "FPS: " << fps << std::endl;
+		}
 
         processInput(window, deltaTime);
 
@@ -120,9 +153,11 @@ int main()
         // Use the shader program
         glUseProgram(shaderProgram);
 
-        
+        // Bind the preloaded texture
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, mapTexture);
 
-        // Update uniforms
+        // Update uniforms that change every frame
         GLint resolutionLoc = glGetUniformLocation(shaderProgram, "uResolution");
         glUniform2f(resolutionLoc, WIDTH, HEIGHT);
 
@@ -132,17 +167,15 @@ int main()
         GLint playerAngleLoc = glGetUniformLocation(shaderProgram, "uPlayerAngle");
         glUniform1f(playerAngleLoc, playerAngle);
 
-        LoadMapToGpu(mapData, shaderProgram);
+        GLint mapLoc = glGetUniformLocation(shaderProgram, "map");
+        glUniform1i(mapLoc, 0); // Texture unit 0
 
         // Draw the quad
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-
-        // Swap buffers
+        // Swap buffers and poll events
         glfwSwapBuffers(window);
-
-        // Poll for and process events
         glfwPollEvents();
     }
 
@@ -160,10 +193,8 @@ int main()
     return 0;
 }
 
-void LoadMapToGpu(int mapData[MAP_WIDTH][MAP_HEIGHT], GLuint shader)
-{
+void LoadMapToGpu(uint8_t mapData[MAP_WIDTH][MAP_HEIGHT]) {
     // Generate and bind a texture object
-    GLuint mapTexture;
     glGenTextures(1, &mapTexture);
     glBindTexture(GL_TEXTURE_2D, mapTexture);
 
@@ -174,15 +205,10 @@ void LoadMapToGpu(int mapData[MAP_WIDTH][MAP_HEIGHT], GLuint shader)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // Transfer map data to the texture
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG, MAP_WIDTH, MAP_HEIGHT, 0, GL_RG, GL_UNSIGNED_BYTE, mapData);
-
-    // Pass the texture to the shader
-    glUseProgram(shader);
-    GLint mapLoc = glGetUniformLocation(shader, "map");
-    glUniform1i(mapLoc, 0); // Bind to texture unit 0
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, mapTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, MAP_WIDTH, MAP_HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE, mapData);
 }
+
+
 
 void processInput(GLFWwindow* window, double deltaTime)
 {

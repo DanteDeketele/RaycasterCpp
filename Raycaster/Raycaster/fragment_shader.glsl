@@ -14,6 +14,11 @@ uniform sampler2D map;
 
 const float FOV = 2;
 
+bool isAir(int value)
+{
+    return (value == 0);
+}
+
 bool isWall(float x, float y) {
     ivec2 bufferSize = textureSize(map, 0);
     int gridX = int(floor(x));
@@ -22,17 +27,14 @@ bool isWall(float x, float y) {
         return true;
     }
     float value = texelFetch(map, ivec2(gridX, gridY), 0).r * 255;
-    return value == 1;
+    return !isAir((int)value);
 }
+
+
 
 
 void main()
 {
-// For debugging: visualize the texture by reading the integer values and mapping them to colors
-    
-
-
-    // color that will be used to filter the final image
     vec3 filterColor = vec3(0.717647, 0.647059, 0.560784);
   
     float screenX = (TexCoord.x - 0.5) * 2.0;
@@ -65,12 +67,14 @@ void main()
   
     float distToWall = 0.0;
     bool hitWall = false;
+    bool wallVariant = false;
   
     while (!hitWall && distToWall < textureSize(map, 0).x) {
         if (rayLength1D.x < rayLength1D.y) {
             mapCheck.x += step.x;
             distToWall = rayLength1D.x;
             rayLength1D.x += stepSize.x;
+
         } else {
             mapCheck.y += step.y;
             distToWall = rayLength1D.y;
@@ -87,11 +91,12 @@ void main()
   
     vec3 color;
     if (TexCoord.y < (0.5 - wallHeight / uResolution.y)) {
-        color = vec3(0.2, 0.2, 0.2);
+        color = vec3(0.2, 0.2, 0.2) * (1-TexCoord.y);
     } else if (TexCoord.y > (0.5 + wallHeight / uResolution.y)) {
         color = vec3(0.7, 0.7, 0.7);
     } else {
         float shade = 1.0 - distToWall / textureSize(map, 0).x;
+
         color = vec3(shade);
     }
   
