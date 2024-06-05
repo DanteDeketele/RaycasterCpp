@@ -9,9 +9,12 @@
 const unsigned int WIDTH = 1920;
 const unsigned int HEIGHT = 1080;
 
+// Define PI
+const float PI = 3.14159265359f;
+
 // Player state
-float playerPosX = 4.0f;
-float playerPosY = 4.0f;
+float playerPosX = 4.5f;
+float playerPosY = 4.5f;
 float playerAngle = 0.0f;
 
 // Shaders
@@ -19,7 +22,7 @@ GLuint shaderProgram;
 GLuint VAO, VBO;
 
 // Function prototypes
-void processInput(GLFWwindow* window);
+void processInput(GLFWwindow* window, double deltaTime);
 void compileShaders();
 void setupBuffers();
 
@@ -41,6 +44,25 @@ int main()
     }
     glfwMakeContextCurrent(window);
 
+    // Log game info
+    std::cout << "--------------------------------" << std::endl;
+    std::cout << "Raycaster" << std::endl;
+    std::cout << "Press WASD to move" << std::endl;
+    std::cout << "Move mouse to look around" << std::endl;
+    std::cout << "Press ESC to exit" << std::endl;
+    std::cout << "--------------------------------" << std::endl;
+    // Log the window info to console
+    std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
+    std::cout << "GLFW version: " << glfwGetVersionString() << std::endl;
+    std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
+    std::cout << "Vendor: " << glGetString(GL_VENDOR) << std::endl;
+    std::cout << "GLSL version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+    std::cout << "Window size: " << WIDTH << "x" << HEIGHT << std::endl;
+    std::cout << "Window handle: " << window << std::endl;
+
+    // Hide the mouse cursor
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
     // Initialize GLEW
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) {
@@ -51,10 +73,21 @@ int main()
     compileShaders();
     setupBuffers();
 
+    // Time variables
+    double lastFrameTime = glfwGetTime();
+
+    // Log start gameloop
+    std::cout << "--------------------------------" << std::endl;
+    std::cout << "Starting game loop" << std::endl;
+
     // Main loop
-    while (!glfwWindowShouldClose(window))
+    while (!glfwWindowShouldClose(window) && !(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS))
     {
-        processInput(window);
+        double currentTime = glfwGetTime();
+        double deltaTime = currentTime - lastFrameTime;
+        lastFrameTime = currentTime;
+
+        processInput(window, deltaTime);
 
         // Render here
         glClear(GL_COLOR_BUFFER_BIT);
@@ -83,6 +116,10 @@ int main()
         glfwPollEvents();
     }
 
+    //  Log game closing
+    std::cout << "--------------------------------" << std::endl;
+    std::cout << "Closing game" << std::endl;
+
     // Clean up
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
@@ -93,28 +130,53 @@ int main()
     return 0;
 }
 
-void processInput(GLFWwindow* window)
+void processInput(GLFWwindow* window, double deltaTime)
 {
-    const float moveSpeed = 0.05f;
-    const float turnSpeed = 0.05f;
+    const float moveSpeed = 2.5f * (float)deltaTime; // Adjust movement speed with delta time
+    const float turnSpeed = 0.075f * (float)deltaTime; // Adjust turn speed with delta time
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    // Check if the window is focused before processing input
+    if (glfwGetWindowAttrib(window, GLFW_FOCUSED))
     {
-        playerPosX += cos(playerAngle) * moveSpeed;
-        playerPosY += sin(playerAngle) * moveSpeed;
-    }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    {
-        playerPosX -= cos(playerAngle) * moveSpeed;
-        playerPosY -= sin(playerAngle) * moveSpeed;
-    }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    {
-        playerAngle -= turnSpeed;
-    }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    {
-        playerAngle += turnSpeed;
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        {
+            playerPosX += cos(playerAngle) * moveSpeed;
+            playerPosY += sin(playerAngle) * moveSpeed;
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        {
+            playerPosX -= cos(playerAngle) * moveSpeed;
+            playerPosY -= sin(playerAngle) * moveSpeed;
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        {
+            playerPosX += cos(playerAngle - PI/2) * moveSpeed;
+            playerPosY += sin(playerAngle - PI/2) * moveSpeed;
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        {
+            playerPosX -= cos(playerAngle - PI / 2) * moveSpeed;
+            playerPosY -= sin(playerAngle - PI / 2) * moveSpeed;
+        }
+
+        // Handle mouse movement
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+
+        double deltaX = xpos - WIDTH / 2.0;
+        double deltaY = ypos - HEIGHT / 2.0;
+
+        // Adjust playerAngle based on mouse movement
+        playerAngle += (float)deltaX * turnSpeed;
+
+        // Clamp playerAngle to keep it within [0, 2*PI)
+        while (playerAngle < 0)
+            playerAngle += 2 * PI;
+        while (playerAngle >= 2 * PI)
+            playerAngle -= 2 * PI;
+        
+        // Center mouse in the window
+        glfwSetCursorPos(window, WIDTH / 2.0, HEIGHT / 2.0);
     }
 }
 

@@ -8,7 +8,7 @@ uniform vec2 uResolution;
 uniform vec2 uPlayerPos;
 uniform float uPlayerAngle;
 
-const float FOV = 1.0;
+const float FOV = 2;
 const float MAP_SIZE = 8.0;
 const int MAP_WIDTH = 8;
 const int MAP_HEIGHT = 8;
@@ -39,7 +39,7 @@ void main()
     vec3 filterColor = vec3(0.717647, 0.647059, 0.560784);
 
     float screenX = (TexCoord.x - 0.5) * 2.0;
-    float rayAngle = uPlayerAngle + screenX * FOV * 0.5;
+    float rayAngle = uPlayerAngle + atan(screenX, 1.0);
 
     vec2 rayDir = vec2(cos(rayAngle), sin(rayAngle));
     vec2 rayPos = uPlayerPos;
@@ -86,7 +86,7 @@ void main()
     }
 
     float perpendicularDist = distToWall * cos(rayAngle - uPlayerAngle);
-    float wallHeight = (1.0 / perpendicularDist) * (uResolution.y / 2.0);
+    float wallHeight = (1.0 / perpendicularDist) * (uResolution.y / 2.0) * cos(atan(0.5, perpendicularDist));
 
     vec3 color;
     if (TexCoord.y < (0.5 - wallHeight / uResolution.y)) {
