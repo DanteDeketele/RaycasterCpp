@@ -31,6 +31,12 @@ private:
     void PrintShutdownMessage();
 
     void Frame();
+    void compileShaders();
+    GLuint loadImage(const std::string& filePath);
+    void LoadMapToGpu(uint8_t mapData[16][16]);
+    void processInput(GLFWwindow* window, double deltaTime, uint8_t mapData[16][16]);
+    void setupBuffers();
+    std::string loadShaderFromFile(const std::string& filePath);
 
     const char* _title = "Raycaster";
 
@@ -38,4 +44,52 @@ private:
     int _height = 1080;
 
     GLFWwindow* _window = NULL;
+
+    // FPS system
+    double frameTimes[60] = {};
+    int frameTimeIndex = 0;
+    float fps = 0;
+    double lastFrameTime = 0;
+
+    const int MAP_WIDTH = 16;
+    const int MAP_HEIGHT = 16;
+    uint8_t mapData[16][16] = {
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+    };
+
+
+    // Define PI
+    const float PI = 3.14159265359f;
+
+    // Player state
+    double playerPosX = 4.5f;
+    double playerPosY = 4.5f;
+    double playerAngle = 0.0f;
+    double playerRadius = 0.2f;
+
+    // Shaders
+    GLuint shaderProgram;
+    GLuint VAO, VBO;
+
+    GLuint mapTexture;
+    GLuint wallTexture;
+    int wallTextureX = 6;
+    int wallTextureY = 20;
+
+    GLuint overlayTexture;
+    GLuint skyTexture;
 };

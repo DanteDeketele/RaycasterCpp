@@ -27,12 +27,6 @@
     <None Include="fragment_shader.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="text_vertex_shader.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="text_fragment_shader.glsl">
-      <Filter>Shaders</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
