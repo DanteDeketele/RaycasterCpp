@@ -1,6 +1,15 @@
 
+#include "game.h"
 
-#include <GL/glew.h>
+int main()
+{
+    Game game(1920, 1080, "Raycaster");
+    game.Run();
+
+    return 0;
+}
+
+/*#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <cmath>
@@ -467,4 +476,4 @@ void setupBuffers()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-}
+}*/
