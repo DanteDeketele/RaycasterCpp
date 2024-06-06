@@ -166,13 +166,19 @@ void Game::Frame()
 
     // FPS counter
     frameTimes[frameTimeIndex] = deltaTime;
-    frameTimeIndex = (frameTimeIndex + 1) % 60;
+    frameTimeIndex = (frameTimeIndex + 1) % 120;
     if (frameTimeIndex == 0) {
         double sum = 0;
-        for (int i = 0; i < 60; i++) {
+        for (int i = 0; i < 120; i++) {
             sum += frameTimes[i];
         }
-        fps = (float)(60.0 / sum);
+        fps = (float)(120.0 / sum);
+
+        
+        for (int i = 200 - 1; i > 0; i--) {
+			frameScreenshot[i] = frameScreenshot[i - 1];
+		}
+        frameScreenshot[0] = fps;
     }
 
 
@@ -244,10 +250,30 @@ void Game::Frame()
 
     std::string fpsString = std::to_string(fps);
 
-    // Example ImGui window
-    ImGui::Begin("Very usefull window for cool raycaster - Dante Deketele");
-    ImGui::Text(("FPS: " + fpsString).c_str());
+    ImGui::Begin("Very useful window for cool raycaster - Dante Deketele");
+    ImGui::Text("FPS: %s", fpsString.c_str());
+    ImGui::Text("Player position: (%f, %f)", playerPosX, playerPosY);
+    ImGui::Text("Player angle: %f", playerAngle);
+
+    float fpsArray[200];
+    for (int i = 0; i < 200; i++) {
+		fpsArray[i] = frameScreenshot[i];
+	}
+
+    ImGui::PlotLines("FPS", fpsArray, 200, 0, NULL, 0, 4000, ImVec2(0, 80));
+
+    float msArray[200];
+    float maxMs = 0;
+    for (int i = 0; i < 200; i++) {
+        msArray[i] = 1/frameScreenshot[i];
+        if (msArray[i] > maxMs) {
+			maxMs = msArray[i];
+		}
+    }
+
+    ImGui::PlotLines("ms", msArray, 200, 0, NULL, 0, maxMs, ImVec2(0, 80));
     ImGui::End();
+
 
     // Rendering
     ImGui::Render();

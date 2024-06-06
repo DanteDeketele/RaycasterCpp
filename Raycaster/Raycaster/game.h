@@ -46,7 +46,8 @@ private:
     GLFWwindow* _window = NULL;
 
     // FPS system
-    double frameTimes[60] = {};
+    double frameTimes[120] = {};
+    float frameScreenshot[200] = {};
     int frameTimeIndex = 0;
     float fps = 0;
     double lastFrameTime = 0;
