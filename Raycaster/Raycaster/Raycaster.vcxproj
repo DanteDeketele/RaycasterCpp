@@ -145,7 +145,12 @@
     <ClInclude Include="shader.h" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="resources\images\wall.png" />
+    <Image Include="images\enemies.png" />
+    <Image Include="images\glow.png" />
+    <Image Include="images\gunsheet.png" />
+    <Image Include="images\overlay.png" />
+    <Image Include="images\sheet.png" />
+    <Image Include="images\sky.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

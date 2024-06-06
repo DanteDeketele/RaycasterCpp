@@ -19,12 +19,13 @@ const int MAP_HEIGHT = 16;
 const float PI = 3.14159265359f;
 
 // Player state
-float playerPosX = 4.5f;
-float playerPosY = 4.5f;
-float playerAngle = 0.0f;
+double playerPosX = 4.5f;
+double playerPosY = 4.5f;
+double playerAngle = 0.0f;
+double playerRadius = 0.2f;
 
 // FPS system
-float frameTimes[60];
+double frameTimes[60];
 int frameTimeIndex = 0;
 
 // Shaders
@@ -33,9 +34,14 @@ GLuint VAO, VBO;
 
 GLuint mapTexture;
 GLuint wallTexture;
+int wallTextureX = 6;
+int wallTextureY = 20;
+
+GLuint overlayTexture;
+GLuint skyTexture;
 
 // Function prototypes
-void processInput(GLFWwindow* window, double deltaTime);
+void processInput(GLFWwindow* window, double deltaTime, uint8_t mapData[MAP_WIDTH][MAP_HEIGHT]);
 void compileShaders();
 void setupBuffers();
 void LoadMapToGpu(uint8_t mapData[MAP_WIDTH][MAP_HEIGHT]);
@@ -58,6 +64,9 @@ int main()
         return -1;
     }
     glfwMakeContextCurrent(window);
+
+    // Ensure V-Sync is disabled
+    glfwSwapInterval(0);
 
     // Log game info
     std::cout << "--------------------------------" << std::endl;
@@ -123,7 +132,9 @@ int main()
 	}
     
     // Load the wall texture
-    wallTexture = loadImage("images/wall.png");
+    wallTexture = loadImage("images/sheet.png");
+    overlayTexture = loadImage("images/overlay.png");
+    skyTexture = loadImage("images/sky.png");
 
     // Load map data to GPU
     LoadMapToGpu(mapData);
@@ -131,6 +142,8 @@ int main()
     // print start data
     std::cout << "Player position: (" << playerPosX << ", " << playerPosY << ")" << std::endl;
     std::cout << "Player angle: " << playerAngle << std::endl;
+
+
 
 
 
@@ -142,7 +155,7 @@ int main()
         lastFrameTime = currentTime;
 
         // FPS counter
-        frameTimes[frameTimeIndex] = (float)deltaTime;
+        frameTimes[frameTimeIndex] = deltaTime;
         frameTimeIndex = (frameTimeIndex + 1) % 60;
         if (frameTimeIndex == 0) {
 			double sum = 0;
@@ -153,7 +166,9 @@ int main()
 			std::cout << "FPS: " << fps << std::endl;
 		}
 
-        processInput(window, deltaTime);
+        processInput(window, deltaTime, mapData);
+
+
 
         // Render here
         glClear(GL_COLOR_BUFFER_BIT);
@@ -167,6 +182,12 @@ int main()
 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, wallTexture);
+
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, overlayTexture);
+
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, skyTexture);
 
         // Update uniforms that change every frame
         GLint resolutionLoc = glGetUniformLocation(shaderProgram, "uResolution");
@@ -183,6 +204,19 @@ int main()
 
         GLint wallLoc = glGetUniformLocation(shaderProgram, "textures");
         glUniform1i(wallLoc, 1); // Texture unit 1
+
+        // Bind wall TextureSheetSize
+        GLint wallXLoc = glGetUniformLocation(shaderProgram, "texturesX");
+        glUniform1i(wallXLoc, wallTextureX);
+
+        GLint wallYLoc = glGetUniformLocation(shaderProgram, "texturesY");
+        glUniform1i(wallYLoc, wallTextureY);
+
+        GLint overlayLoc = glGetUniformLocation(shaderProgram, "overlay");
+        glUniform1i(overlayLoc, 2); // Texture unit 2
+
+        GLint skyLoc = glGetUniformLocation(shaderProgram, "skybox");
+        glUniform1i(skyLoc, 3); // Texture unit 3
 
         // Draw the quad
         glBindVertexArray(VAO);
@@ -224,34 +258,43 @@ void LoadMapToGpu(uint8_t mapData[MAP_WIDTH][MAP_HEIGHT]) {
 
 
 
-void processInput(GLFWwindow* window, double deltaTime)
+void processInput(GLFWwindow* window, double deltaTime, uint8_t mapData[MAP_WIDTH][MAP_HEIGHT])
 {
-    const float moveSpeed = 2.5f * (float)deltaTime; // Adjust movement speed with delta time
-    const float turnSpeed = 0.075f * (float)deltaTime; // Adjust turn speed with delta time
+    const double moveSpeed = 2.5f * deltaTime; // Adjust movement speed with delta time
+    const double turnSpeed = 0.001f; // Adjust turn speed with delta time
 
     // Check if the window is focused before processing input
     if (glfwGetWindowAttrib(window, GLFW_FOCUSED))
     {
+        double moveX = 0;
+        double moveY = 0;
+
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         {
-            playerPosX += cos(playerAngle) * moveSpeed;
-            playerPosY += sin(playerAngle) * moveSpeed;
+            moveX += cos(playerAngle) * moveSpeed;
+            moveY += sin(playerAngle) * moveSpeed;
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
         {
-            playerPosX -= cos(playerAngle) * moveSpeed;
-            playerPosY -= sin(playerAngle) * moveSpeed;
+            moveX -= cos(playerAngle) * moveSpeed;
+            moveY -= sin(playerAngle) * moveSpeed;
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
         {
-            playerPosX += cos(playerAngle - PI/2) * moveSpeed;
-            playerPosY += sin(playerAngle - PI/2) * moveSpeed;
+            moveX += cos(playerAngle - PI/2) * moveSpeed;
+            moveY += sin(playerAngle - PI/2) * moveSpeed;
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         {
-            playerPosX -= cos(playerAngle - PI / 2) * moveSpeed;
-            playerPosY -= sin(playerAngle - PI / 2) * moveSpeed;
+            moveX -= cos(playerAngle - PI / 2) * moveSpeed;
+            moveY -= sin(playerAngle - PI / 2) * moveSpeed;
         }
+
+        if (playerPosX + moveX / abs(moveX) * playerRadius >= 0 && playerPosX + moveX / abs(moveX) * playerRadius < MAP_WIDTH && mapData[(int)(playerPosX + moveX/abs(moveX) * playerRadius)][(int)playerPosY] == 0)
+			playerPosX += moveX;
+
+        if (playerPosY + moveY / abs(moveY) * playerRadius >= 0 && playerPosY + moveY / abs(moveY) * playerRadius < MAP_HEIGHT && mapData[(int)playerPosX][(int)(playerPosY + moveY/abs(moveY) * playerRadius)] == 0)
+            playerPosY += moveY;
 
         // Handle mouse movement
         double xpos, ypos;
@@ -261,7 +304,7 @@ void processInput(GLFWwindow* window, double deltaTime)
         double deltaY = ypos - HEIGHT / 2.0;
 
         // Adjust playerAngle based on mouse movement
-        playerAngle += (float)deltaX * turnSpeed;
+        playerAngle += deltaX * turnSpeed;
 
         // Clamp playerAngle to keep it within [0, 2*PI)
         while (playerAngle < 0)
@@ -292,8 +335,8 @@ GLuint loadImage(const std::string& filePath)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     // Set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // Load image using stb_image
     int width, height, nrChannels;

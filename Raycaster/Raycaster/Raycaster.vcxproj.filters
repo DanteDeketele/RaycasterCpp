@@ -46,7 +46,22 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="resources\images\wall.png">
+    <Image Include="images\gunsheet.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="images\overlay.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="images\sheet.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="images\sky.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="images\enemies.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="images\glow.png">
       <Filter>Resource Files\images</Filter>
     </Image>
   </ItemGroup>
