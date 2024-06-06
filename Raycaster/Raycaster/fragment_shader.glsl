@@ -16,7 +16,7 @@ uniform int texturesY;
 uniform sampler2D overlay;
 uniform sampler2D skybox;
 
-const float FOV = 2;
+const float FOV = 1;
 
 bool isAir(int value)
 {
@@ -71,17 +71,19 @@ void main()
 
     float distToWall = 0.0;
     bool hitWall = false;
-    bool wallVariant = false;
+    bool wallVertical = false;
 
     while (!hitWall && distToWall < textureSize(map, 0).x) {
         if (rayLength1D.x < rayLength1D.y) {
             mapCheck.x += step.x;
             distToWall = rayLength1D.x;
             rayLength1D.x += stepSize.x;
+            wallVertical = true;
         } else {
             mapCheck.y += step.y;
             distToWall = rayLength1D.y;
             rayLength1D.y += stepSize.y;
+            wallVertical = false;
         }
 
         if (isWall(mapCheck.x, mapCheck.y)) {
@@ -94,48 +96,51 @@ void main()
 
     vec3 color;
     if (TexCoord.y < (0.5 - wallHeight / uResolution.y)) {
-        color = vec3(0.2, 0.2, 0.2) * (1 - TexCoord.y);
+        color = vec3(1.0, 1.0, 1.0);
     } else if (TexCoord.y > (0.5 + wallHeight / uResolution.y)) {
-
-        color = texture(skybox, vec2(3*rayAngle / (2 * 3.14159265359), TexCoord.y)).rgb;
-        color = vec3(1,1,1) * color.r;
+        color = texture(skybox, vec2(3 * rayAngle / (2 * 3.14159265359), TexCoord.y)).rgb;
+        color = vec3(1, 1, 1) * color.r;
     } else {
-        float shade = 1.0 - distToWall / textureSize(map, 0).x;
-
-        // Calculate texture coordinates
-        bool isWallFacingNorthSouth = abs(rayDir.y) > abs(rayDir.x);
-        bool isWallFacingWestEast = !isWallFacingNorthSouth;
+        float shade = 1.0 - distToWall / textureSize(map, 0).x / 2;
 
         vec2 texCoord;
-        if (isWallFacingWestEast) {
-            texCoord.x = fract(rayPos.y + distToWall * sin(rayAngle));
+        if (wallVertical) {
+            texCoord.x = fract(rayPos.y + distToWall * rayDir.y);
         } else {
-            texCoord.x = fract(rayPos.x + distToWall * cos(rayAngle));
+            texCoord.x = fract(rayPos.x + distToWall * rayDir.x);
         }
         texCoord.y = fract((TexCoord.y - 0.5 + wallHeight) * (uResolution.y / wallHeight) / 2 - 0.5);
 
-        // Determine tile index dynamically
-        // Assuming some logic to determine the correct subdivisionIndexX and subdivisionIndexY based on the map position
         int subdivisionIndexX = int(0) % texturesX;
         int subdivisionIndexY = int(18) % texturesY;
 
-        // Calculate the width and height of each subdivision
         float subdivisionWidth = 1.0 / float(texturesX);
-        float subdivisionHeight = 1.0 / float(texturesY-1);
-
-        // Calculate the starting UV position of the desired subdivision
+        float subdivisionHeight = 1.0 / float(texturesY - 1);
         vec2 subdivisionStart = vec2(subdivisionWidth * subdivisionIndexX, subdivisionHeight * subdivisionIndexY);
-
-        // Calculate the UV position within the subdivision
         vec2 subdivisionTexCoord = texCoord * vec2(subdivisionWidth, subdivisionHeight);
-
-        // Calculate the final texCoord by adding the subdivisionStart and subdivisionTexCoord
         vec2 finalTexCoord = subdivisionStart + subdivisionTexCoord;
-
-        // Sample the texture using the finalTexCoord
         vec4 texColor = texture(textures, finalTexCoord);
         color = vec3(shade) * texColor.rgb;
     }
+
+    // Floor rendering
+    if (TexCoord.y < 0.5 - wallHeight / uResolution.y) {
+        // Calculate the distance to the floor
+        float floorDist = (0.5 * uResolution.y) / ((TexCoord.y - 0.5) *cos(rayAngle - uPlayerAngle));
+
+        // Calculate the position of the floor intersection
+        vec2 floorPos = uPlayerPos + rayDir * floorDist;
+
+        // Calculate the texture coordinates for the floor
+        vec2 floorTexCoords = floorPos/uResolution.y - vec2(floor(floorPos.x), floor(floorPos.y));
+
+        // Get the texture color for the floor
+        vec4 floorColor = texture(textures, - uPlayerPos + floorTexCoords);
+
+        // Mix the floor color with the wall color
+        color *= floorColor.r * (1 -TexCoord.y);
+    }
+
 
     FragColor = vec4(color * filterColor, 1.0);
 }

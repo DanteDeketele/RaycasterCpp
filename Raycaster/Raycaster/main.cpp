@@ -1,9 +1,12 @@
+
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <cmath>
 #include <fstream>
 #include <sstream>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -27,6 +30,7 @@ double playerRadius = 0.2f;
 // FPS system
 double frameTimes[60];
 int frameTimeIndex = 0;
+float fps = 0;
 
 // Shaders
 GLuint shaderProgram;
@@ -40,12 +44,15 @@ int wallTextureY = 20;
 GLuint overlayTexture;
 GLuint skyTexture;
 
+//GLuint textTexture;
+
 // Function prototypes
 void processInput(GLFWwindow* window, double deltaTime, uint8_t mapData[MAP_WIDTH][MAP_HEIGHT]);
 void compileShaders();
 void setupBuffers();
 void LoadMapToGpu(uint8_t mapData[MAP_WIDTH][MAP_HEIGHT]);
 GLuint loadImage(const std::string& filePath);
+
 
 int main()
 {
@@ -55,6 +62,7 @@ int main()
         return -1;
     }
 
+   
     // Create a GLFWwindow object
     GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Raycaster", NULL, NULL);
     if (window == NULL)
@@ -93,6 +101,9 @@ int main()
         std::cerr << "Failed to initialize GLEW\n";
         return -1;
     }
+
+    // print glew version
+    std::cout << "GLEW version: " << glewGetString(GLEW_VERSION) << std::endl;
 
     compileShaders();
     setupBuffers();
@@ -143,10 +154,6 @@ int main()
     std::cout << "Player position: (" << playerPosX << ", " << playerPosY << ")" << std::endl;
     std::cout << "Player angle: " << playerAngle << std::endl;
 
-
-
-
-
     // Main loop
     while (!glfwWindowShouldClose(window) && !(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS))
     {
@@ -162,7 +169,7 @@ int main()
 			for (int i = 0; i < 60; i++) {
 				sum += frameTimes[i];
 			}
-			double fps = 60.0 / sum;
+			fps = (float)(60.0 / sum);
 			std::cout << "FPS: " << fps << std::endl;
 		}
 
@@ -194,10 +201,10 @@ int main()
         glUniform2f(resolutionLoc, WIDTH, HEIGHT);
 
         GLint playerPosLoc = glGetUniformLocation(shaderProgram, "uPlayerPos");
-        glUniform2f(playerPosLoc, playerPosX, playerPosY);
+        glUniform2f(playerPosLoc, (GLfloat)playerPosX, (GLfloat)playerPosY);
 
         GLint playerAngleLoc = glGetUniformLocation(shaderProgram, "uPlayerAngle");
-        glUniform1f(playerAngleLoc, playerAngle);
+        glUniform1f(playerAngleLoc, (GLfloat)playerAngle);
 
         GLint mapLoc = glGetUniformLocation(shaderProgram, "map");
         glUniform1i(mapLoc, 0); // Texture unit 0
@@ -235,6 +242,7 @@ int main()
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteProgram(shaderProgram);
+
 
     glfwDestroyWindow(window);
     glfwTerminate();
@@ -344,7 +352,7 @@ GLuint loadImage(const std::string& filePath)
     unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &nrChannels, 0);
     if (data)
     {
-        GLenum format;
+        GLenum format = GL_RGB;
         if (nrChannels == 1)
             format = GL_RED;
         else if (nrChannels == 3)

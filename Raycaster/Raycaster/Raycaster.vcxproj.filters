@@ -16,9 +16,6 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{fdcbd0e9-e927-4b2b-8595-c7edce57a793}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files\imgui">
-      <UniqueIdentifier>{d9eb5e02-82d5-4a32-9120-ab2e6c0690fa}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource Files\images">
       <UniqueIdentifier>{dee3e40b-d522-41ad-9d3d-1d60b7eecb48}</UniqueIdentifier>
     </Filter>
@@ -29,6 +26,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="fragment_shader.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="text_vertex_shader.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="text_fragment_shader.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
@@ -42,6 +45,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\packages\nupengl.core.0.1.0.1\build\native\include\GL\glew.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -62,6 +68,9 @@
       <Filter>Resource Files\images</Filter>
     </Image>
     <Image Include="images\glow.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="images\font.png">
       <Filter>Resource Files\images</Filter>
     </Image>
   </ItemGroup>

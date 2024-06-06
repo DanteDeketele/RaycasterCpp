@@ -104,7 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\RaycasterCpp\Raycaster\Raycaster\stb;C:\Users\mrdee\OneDrive\Documenten\Libraries\glfw-3.4.bin.WIN64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\RaycasterCpp\Raycaster\Raycaster\imgui;C:\RaycasterCpp\Raycaster\Raycaster\stb;C:\RaycasterCpp\Raycaster\Raycaster\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -121,7 +121,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\RaycasterCpp\Raycaster\Raycaster\stb;C:\Users\mrdee\OneDrive\Documenten\Libraries\glfw-3.4.bin.WIN64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\RaycasterCpp\Raycaster\Raycaster\imgui;C:\RaycasterCpp\Raycaster\Raycaster\stb;C:\RaycasterCpp\Raycaster\Raycaster\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -135,6 +135,8 @@
   <ItemGroup>
     <None Include="fragment_shader.glsl" />
     <None Include="packages.config" />
+    <None Include="text_fragment_shader.glsl" />
+    <None Include="text_vertex_shader.glsl" />
     <None Include="vertex_shader.glsl" />
   </ItemGroup>
   <ItemGroup>
@@ -142,10 +144,12 @@
     <ClCompile Include="shader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\packages\nupengl.core.0.1.0.1\build\native\include\GL\glew.h" />
     <ClInclude Include="shader.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="images\enemies.png" />
+    <Image Include="images\font.png" />
     <Image Include="images\glow.png" />
     <Image Include="images\gunsheet.png" />
     <Image Include="images\overlay.png" />
