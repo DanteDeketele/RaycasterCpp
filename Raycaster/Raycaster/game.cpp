@@ -39,8 +39,8 @@ void Game::Initialize()
     // Print renderer boot message
     PrintRendererBootMessage();
 
-    // Hide cursor
-    HideCursor(true);
+    // Ensure V-Sync is disabled
+    glfwSwapInterval(0);
 
     // Initialize GLEW
     glewExperimental = GL_TRUE;
@@ -93,16 +93,6 @@ bool Game::LoadWindow(bool& retFlag)
     glfwSwapInterval(0);
     retFlag = false;
     return {};
-}
-
-void Game::HideCursor(bool value)
-{
-    if (value)
-		// Show the mouse cursor
-		glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-	else
-        // Hide the mouse cursor
-        glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 }
 
 void Game::PrintBootMessage()
@@ -346,18 +336,49 @@ void Game::processInput(GLFWwindow* window, double deltaTime, uint8_t mapData[16
         double deltaX = xpos - _width / 2.0;
         double deltaY = ypos - _height / 2.0;
 
-        // Adjust playerAngle based on mouse movement
-        playerAngle += deltaX * turnSpeed;
+        // Check if the mouse is hovering over ImGui UI
+        ImGuiIO& io = ImGui::GetIO();
+        if (!io.WantCaptureMouse)
+        {
+            
 
-        // Clamp playerAngle to keep it within [0, 2*PI)
-        while (playerAngle < 0)
-            playerAngle += 2 * PI;
-        while (playerAngle >= 2 * PI)
-            playerAngle -= 2 * PI;
+            if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+			{
+				gameFocused = false;
+			}
+            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+			{
+			    gameFocused = true;
+                glfwSetCursorPos(window, _width / 2.0, _height / 2.0);
+			}
 
-        // Center mouse in the window
-        glfwSetCursorPos(window, _width / 2.0, _height / 2.0);
+            // Center mouse in the window
+            if (gameFocused) 
+            {
+                // Adjust playerAngle based on mouse movement
+                playerAngle += deltaX * turnSpeed;
+
+                // Clamp playerAngle to keep it within [0, 2*PI)
+                while (playerAngle < 0)
+                    playerAngle += 2 * PI;
+                while (playerAngle >= 2 * PI)
+                    playerAngle -= 2 * PI;
+                glfwSetCursorPos(window, _width / 2.0, _height / 2.0);
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+            }
+                
+        }
+        else
+        {
+			gameFocused = false;
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
     }
+    else
+    {
+		gameFocused = false;
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
 }
 
 std::string Game::loadShaderFromFile(const std::string& filePath) {

@@ -44,6 +44,7 @@ private:
     int _height = 1080;
 
     GLFWwindow* _window = NULL;
+    bool gameFocused = true;
 
     // FPS system
     double frameTimes[120] = {};
