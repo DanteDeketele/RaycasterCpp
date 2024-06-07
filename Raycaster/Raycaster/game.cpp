@@ -382,7 +382,11 @@ void Game::processInput(GLFWwindow* window, double deltaTime, uint8_t mapData[16
 }
 
 std::string Game::loadShaderFromFile(const std::string& filePath) {
-    std::ifstream shaderFile(filePath);
+    std::ifstream shaderFile("shaders/" + filePath);
+    if (!shaderFile) {
+        std::cerr << "Failed to load shader: shaders/" << filePath << std::endl;
+        return "";
+    }
     std::stringstream shaderStream;
     shaderStream << shaderFile.rdbuf();
     return shaderStream.str();

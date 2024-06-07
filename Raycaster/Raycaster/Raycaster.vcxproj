@@ -112,6 +112,14 @@
       <AdditionalLibraryDirectories>C:\RaycasterCpp\Raycaster\Raycaster\glew-2.1.0\lib\Release\x64;C:\RaycasterCpp\Raycaster\Raycaster\glfw-3.4.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glew32.lib;glfw3.lib;opengl32.lib;user32.lib;gdi32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /E /I /Y "$(ProjectDir)shaders" "$(OutDir)shaders"
+xcopy /E /I /Y "$(ProjectDir)images" "$(OutDir)images"
+
+xcopy /Y "$(ProjectDir)glew-2.1.0\bin\Release\x64\glew32.dll" "$(OutDir)"
+
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -131,11 +139,15 @@
       <AdditionalLibraryDirectories>C:\RaycasterCpp\Raycaster\Raycaster\glew-2.1.0\lib\Release\x64;C:\RaycasterCpp\Raycaster\Raycaster\glfw-3.4.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glew32.lib;glfw3.lib;opengl32.lib;user32.lib;gdi32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /E /I /Y "$(ProjectDir)shaders" "$(OutDir)shaders"
+xcopy /E /I /Y "$(ProjectDir)images" "$(OutDir)images"
+
+xcopy /Y "$(ProjectDir)glew-2.1.0\bin\Release\x64\glew32.dll" "$(OutDir)"
+
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <None Include="fragment_shader.glsl" />
-    <None Include="vertex_shader.glsl" />
-  </ItemGroup>
   <ItemGroup>
     <ClCompile Include="game.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
@@ -169,6 +181,10 @@
     <Image Include="images\overlay.png" />
     <Image Include="images\sheet.png" />
     <Image Include="images\sky.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\fragment_shader.glsl" />
+    <None Include="shaders\vertex_shader.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
